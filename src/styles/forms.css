@@ -1,0 +1,201 @@
+.auth-page,
+.order-page,
+.dashboard-page {
+  padding: 40px 0;
+}
+
+.forms-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+  gap: 24px;
+  align-items: stretch;
+}
+
+.form-panel,
+.auth-card,
+.order-card,
+.dashboard-card {
+  border: 1px solid rgba(255, 255, 255, 0.48);
+  border-radius: 30px;
+  background: rgba(255, 251, 248, 0.95);
+  box-shadow: var(--shadow);
+}
+
+.form-panel {
+  padding: 32px;
+  background:
+    linear-gradient(180deg, rgba(233, 198, 190, 0.72), rgba(255, 247, 242, 0.9)),
+    rgba(255, 251, 248, 0.9);
+}
+
+.form-panel h1 {
+  margin-bottom: 14px;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  line-height: 1;
+  color: #fffdfa;
+}
+
+.form-panel p {
+  max-width: 44ch;
+  color: rgba(90, 58, 51, 0.8);
+}
+
+.form-highlights {
+  display: grid;
+  gap: 14px;
+  margin-top: 28px;
+}
+
+.form-highlight {
+  padding: 16px 18px;
+  border-radius: 22px;
+  background: rgba(255, 251, 248, 0.68);
+  backdrop-filter: blur(8px);
+}
+
+.form-highlight strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.auth-card,
+.order-card {
+  padding: 28px;
+}
+
+.form-header {
+  margin-bottom: 22px;
+}
+
+.form-header h2 {
+  margin-bottom: 8px;
+  font-size: 1.8rem;
+}
+
+.form-header p {
+  color: var(--muted);
+}
+
+.auth-form,
+.order-form {
+  display: grid;
+  gap: 14px;
+}
+
+.field-group {
+  display: grid;
+  gap: 8px;
+}
+
+.field-group label {
+  font-size: 0.94rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid rgba(90, 58, 51, 0.12);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--ink);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: rgba(190, 127, 119, 0.55);
+  box-shadow: 0 0 0 4px rgba(220, 165, 156, 0.16);
+}
+
+textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.form-submit,
+form button,
+.auth-card button,
+.order-card button,
+.actions-row button {
+  min-height: 48px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 999px;
+  color: #fff8f4;
+  background: var(--rose-deep);
+  box-shadow: 0 16px 26px rgba(190, 127, 119, 0.24);
+}
+
+.form-submit-secondary {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: none;
+}
+
+.switch-auth {
+  margin-top: 18px;
+  color: var(--muted);
+}
+
+.switch-auth button {
+  margin-left: 4px;
+  padding: 0;
+  border: none;
+  color: var(--rose-deep);
+  background: transparent;
+  box-shadow: none;
+}
+
+.dashboard-card {
+  max-width: 420px;
+  padding: 24px;
+}
+
+.dashboard-list {
+  display: grid;
+  gap: 16px;
+}
+
+.actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+@media (max-width: 960px) {
+  .forms-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .auth-page,
+  .order-page,
+  .dashboard-page {
+    padding: 28px 0;
+  }
+
+  .form-panel,
+  .auth-card,
+  .order-card {
+    padding: 22px;
+    border-radius: 24px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
