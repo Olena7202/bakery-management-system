@@ -18,6 +18,11 @@
   text-shadow: 0 8px 24px rgba(101, 54, 47, 0.12);
 }
 
+.logo:focus,
+.logo:focus-visible {
+  outline: none;
+}
+
 .nav-links {
   display: flex;
   align-items: center;
@@ -26,6 +31,7 @@
   border: 1px solid rgba(255, 255, 255, 0.34);
   border-radius: 999px;
   background: rgba(255, 250, 246, 0.22);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
 }
 
@@ -43,9 +49,47 @@
   transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
+.account-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 12px 34px rgba(112, 68, 60, 0.12);
+}
+
+.account-icon {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: var(--rose-deep);
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.account-logout-btn {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 999px;
+  color: #fff8f4;
+  background: var(--rose-deep);
+  box-shadow: 0 12px 34px rgba(112, 68, 60, 0.12);
+}
+
 .nav-link:hover,
-.order-btn:hover {
+.order-btn:hover,
+.account-btn:hover {
   background: rgba(255, 255, 255, 0.16);
+  transform: translateY(-1px);
+}
+
+.account-logout-btn:hover {
+  background: #a96d66;
   transform: translateY(-1px);
 }
 
@@ -75,7 +119,8 @@
   }
 
   .nav-link,
-  .order-btn {
+  .order-btn,
+  .account-logout-btn {
     padding: 8px 12px;
     font-size: 0.95rem;
   }

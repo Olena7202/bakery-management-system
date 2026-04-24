@@ -1,9 +1,40 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/NavBar/NavBar";
+import { getDashboardPathByRole, loginUser, registerUser } from "../../services/authStorage";
 
 export default function Auth() {
+  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [role, setRole] = useState("client");
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  function handleSubmit(event) {
+    event.preventDefault();
+    setErrorMessage("");
+
+    if (isLogin) {
+      const result = loginUser({ email, password });
+      if (!result.ok) {
+        setErrorMessage(result.message);
+        return;
+      }
+
+      navigate(getDashboardPathByRole(result.user.role), { replace: true });
+      return;
+    }
+
+    const result = registerUser({ fullName, email, password, role });
+    if (!result.ok) {
+      setErrorMessage(result.message);
+      return;
+    }
+
+    navigate(getDashboardPathByRole(result.user.role), { replace: true });
+  }
 
   return (
     <div className="page">
@@ -40,22 +71,43 @@ export default function Auth() {
               </p>
             </div>
 
-            <form className="auth-form">
+            <form className="auth-form" onSubmit={handleSubmit}>
               {!isLogin && (
                 <div className="field-group">
                   <label htmlFor="fullName">Ім&apos;я та прізвище</label>
-                  <input id="fullName" type="text" placeholder="Олена Коваленко" />
+                  <input
+                    id="fullName"
+                    type="text"
+                    placeholder="Олена Коваленко"
+                    required
+                    value={fullName}
+                    onChange={(event) => setFullName(event.target.value)}
+                  />
                 </div>
               )}
 
               <div className="field-group">
                 <label htmlFor="email">Email</label>
-                <input id="email" type="email" placeholder="hello@bakery.ua" />
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="hello@bakery.ua"
+                  required
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                />
               </div>
 
               <div className="field-group">
                 <label htmlFor="password">Пароль</label>
-                <input id="password" type="password" placeholder="Введіть пароль" />
+                <input
+                  id="password"
+                  type="password"
+                  placeholder="Введіть пароль"
+                  required
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                />
               </div>
 
               {!isLogin && (
@@ -71,6 +123,8 @@ export default function Auth() {
                   </select>
                 </div>
               )}
+
+              {errorMessage && <p className="form-error">{errorMessage}</p>}
 
               <button className="form-submit" type="submit">
                 {isLogin ? "Увійти" : "Створити акаунт"}

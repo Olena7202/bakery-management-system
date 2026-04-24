@@ -50,6 +50,7 @@
   padding: 16px 18px;
   border-radius: 22px;
   background: rgba(255, 251, 248, 0.68);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
 
@@ -158,6 +159,11 @@ form button,
   box-shadow: none;
 }
 
+.form-error {
+  color: #9c2f2f;
+  font-size: 0.92rem;
+}
+
 .dashboard-card {
   max-width: 420px;
   padding: 24px;
@@ -166,6 +172,7 @@ form button,
 .dashboard-list {
   display: grid;
   gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
 .actions-row {
@@ -174,6 +181,7 @@ form button,
   gap: 10px;
   margin-top: 14px;
 }
+
 
 @media (max-width: 960px) {
   .forms-layout {
