@@ -3,6 +3,8 @@ export default function ProductModal({ product, onClose }) {
     return null;
   }
 
+  const ingredients = product.ingredients ? product.ingredients.split(',') : [];
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(event) => event.stopPropagation()}>
@@ -10,11 +12,11 @@ export default function ProductModal({ product, onClose }) {
           ×
         </button>
 
-        <img src={product.image} alt={product.name} className="modal-image" />
+        <img src={product.photoUrl} alt={product.name} className="modal-image" />
         <h2>{product.name}</h2>
         <p>{product.description}</p>
         <p>
-          <strong>Ціна:</strong> {product.price} грн
+          <strong>Ціна:</strong> {product.basePrice} грн
         </p>
         <p>
           <strong>Вага:</strong> {product.weight}
@@ -22,9 +24,10 @@ export default function ProductModal({ product, onClose }) {
 
         <h4>Склад</h4>
         <ul>
-          {product.ingredients.map((ingredient) => (
-            <li key={ingredient}>{ingredient}</li>
+          {ingredients.map((ingredient) => (
+            <li key={ingredient}>{ingredient.trim()}</li>
           ))}
+          
         </ul>
       </div>
     </div>

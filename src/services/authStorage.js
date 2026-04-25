@@ -1,71 +1,60 @@
-const USERS_KEY = "bakery_users";
+import api from '../api/axiosConfig';
+
 const CURRENT_USER_KEY = "bakery_current_user";
 
-function readJson(key, fallbackValue) {
-  const rawValue = localStorage.getItem(key);
-  if (!rawValue) return fallbackValue;
+export function getCurrentUser() {
+  const raw = localStorage.getItem(CURRENT_USER_KEY);
+  if (!raw) return null;
 
   try {
-    return JSON.parse(rawValue);
+    return JSON.parse(raw);
   } catch {
-    return fallbackValue;
+    return null;
   }
-}
-
-function saveJson(key, value) {
-  localStorage.setItem(key, JSON.stringify(value));
-}
-
-export function getUsers() {
-  return readJson(USERS_KEY, []);
-}
-
-export function getCurrentUser() {
-  return readJson(CURRENT_USER_KEY, null);
 }
 
 export function logout() {
   localStorage.removeItem(CURRENT_USER_KEY);
+  localStorage.removeItem('token');
 }
 
 export function getDashboardPathByRole(role) {
   return role === "confectioner" ? "/confectioner" : "/client";
 }
 
-export function registerUser({ fullName, email, password, role }) {
-  const users = getUsers();
-  const normalizedEmail = email.trim().toLowerCase();
-  const alreadyExists = users.some((user) => user.email === normalizedEmail);
-
-  if (alreadyExists) {
-    return { ok: false, message: "Користувач з таким email вже існує." };
+export async function registerUser({ fullName, email, password, role }) {
+  try {
+    await api.post('/auth/register', {
+      name: fullName.trim(),
+      email: email.trim().toLowerCase(),
+      password,
+      phone: '',
+      role: role === 'confectioner' ? 'Confectioner' : 'Client'
+    });
+    return await loginUser({ email, password });
+  } catch (error) {
+    const message = error.response?.data || 'Registration failed';
+    return { ok: false, message };
   }
-
-  const newUser = {
-    id: crypto.randomUUID(),
-    fullName: fullName.trim(),
-    email: normalizedEmail,
-    password,
-    role
-  };
-
-  users.push(newUser);
-  saveJson(USERS_KEY, users);
-  saveJson(CURRENT_USER_KEY, newUser);
-  return { ok: true, user: newUser };
 }
 
-export function loginUser({ email, password }) {
-  const users = getUsers();
-  const normalizedEmail = email.trim().toLowerCase();
-  const matchedUser = users.find(
-    (user) => user.email === normalizedEmail && user.password === password
-  );
 
-  if (!matchedUser) {
-    return { ok: false, message: "Неправильний email або пароль." };
+export async function loginUser({ email, password }) {
+  try {
+    const response = await api.post('/auth/login', {
+      email: email.trim().toLowerCase(),
+      password
+    });
+
+    const { token, role, userId, name } = response.data;
+
+    localStorage.setItem('token', token);
+    const user = { id: userId, fullName: name, email, role: role.toLowerCase() };
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+
+    return { ok: true, user };
+  } catch (error) {
+    const message = error.response?.data || 'Invalid email or password!';
+    return { ok: false, message };
   }
-
-  saveJson(CURRENT_USER_KEY, matchedUser);
-  return { ok: true, user: matchedUser };
 }

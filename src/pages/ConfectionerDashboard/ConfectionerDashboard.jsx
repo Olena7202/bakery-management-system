@@ -1,16 +1,28 @@
+import { useState, useEffect } from "react";
 import Navbar from "../../components/NavBar/NavBar";
+import { getOrders, updateOrderStatus } from "../../services/orderService";
 
-const incomingOrders = [
-  { id: 1, client: "Olena", item: "Raspberry Cake", date: "2026-04-25", status: "Pending" },
-  { id: 2, client: "Anna", item: "Berry Tart", date: "2026-04-26", status: "Accepted" }
-];
-
-const cakeTemplates = [
-  { id: "A-12", title: "Birthday Cake", priceFrom: "1200 UAH", prepTime: "2 days" },
-  { id: "C-08", title: "Chocolate Bento", priceFrom: "550 UAH", prepTime: "1 day" }
-];
 
 export default function ConfectionerDashboard() {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getOrders().then((data) => {
+      setOrders(data);
+      setLoading(false);
+    });
+  }, []);
+
+  const handleStatusChange = async (orderId, status) => {
+    await updateOrderStatus(orderId, status);
+    setOrders((prev) => 
+      prev.map((o) => (o.id === orderId ? { ...o, status } : o))
+    );
+  };
+
+  if (loading) return <div className="page"><Navbar /><p>Завантаження...</p></div>;
+
   return (
     <div className="page">
       <Navbar />
@@ -18,12 +30,13 @@ export default function ConfectionerDashboard() {
       <div className="dashboard-page">
         <h2>Confectioner Dashboard</h2>
         <div className="dashboard-list">
-          {cakeTemplates.map((cake) => (
-            <div key={cake.id} className="dashboard-card">
-              <h3>{cake.title}</h3>
-              <p>Template ID: {cake.id}</p>
-              <p>Price from: {cake.priceFrom}</p>
+          {orders.map((order) => (
+            <div key={order.id} className="dashboard-card">
+              <h3>{order.client?.name}</h3>
+              <p>Client: {order.client?.name}</p>
+              <p>Price: {order.deliveryDate ? new Date(order.deliveryDate).toLocaleDateString('uk-UA') : '—'}</p>
               <p>Prep time: {cake.prepTime}</p>
+              <p>Status: {order.status}</p>
             </div>
           ))}
           {incomingOrders.map((order) => (
@@ -32,11 +45,12 @@ export default function ConfectionerDashboard() {
               <p>Client: {order.client}</p>
               <p>Date: {order.date}</p>
               <p>Status: {order.status}</p>
+              {order.note && <p>Note: {order.note}</p>}
 
               <div className="actions-row">
-                <button>Accept</button>
-                <button>Reject</button>
-                <button>Done</button>
+                <button onClick={() => handleStatusChange(order.id, 'Accepted')}>Accept</button>
+                <button onClick={() => handleStatusChange(order.id, 'In Progress')}>In Progress</button>
+                <button onClick={() => handleStatusChange(order.id, 'Ready')}>Done</button>
               </div>
             </div>
           ))}

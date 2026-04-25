@@ -12,12 +12,12 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
     setErrorMessage("");
 
     if (isLogin) {
-      const result = loginUser({ email, password });
+      const result = await loginUser({ email, password });
       if (!result.ok) {
         setErrorMessage(result.message);
         return;
@@ -27,7 +27,7 @@ export default function Auth() {
       return;
     }
 
-    const result = registerUser({ fullName, email, password, role });
+    const result = await registerUser({ fullName, email, password, role });
     if (!result.ok) {
       setErrorMessage(result.message);
       return;
