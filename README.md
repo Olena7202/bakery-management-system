@@ -14,6 +14,48 @@ npm install
 npm run dev
 ```
 
+# How to Set Up Cake Shop Server
+
+## Вимоги
+- [.NET 9 SDK](https://dotnet.microsoft.com/download)
+- [SQL Server Developer Edition](https://www.microsoft.com/en-us/sql-server/sql-server-downloads) (безкоштовно)
+- [SQL Server Management Studio (SSMS)](https://aka.ms/ssmsfullsetup)
+- [Node.js](https://nodejs.org/)
+
+## Налаштування бази даних
+1. Завантаж та встанови **SQL Server Developer Edition**
+   - Вибери тип встановлення **Basic**
+   - Під час встановлення вибери **Windows Authentication** (без пароля)
+2. Завантаж та встанови **SSMS**
+3. Відкрий SSMS → підключись до `localhost` → Windows Authentication → Connect
+4. У верхньому меню натисни **File → Open → File** → вибери `sql/01_create_tables.sql`
+5. Натисни **F5** щоб виконати
+6. Знову **File → Open → File** → вибери `sql/02_seed_data.sql`
+7. Натисни **F5** щоб виконати
+
+## Налаштування бекенду
+1. Відкрий папку `sweetVenomServer` у Visual Studio
+2. Відкрий `appsettings.json` і перевір що connection string виглядає так:
+```json
+"ConnectionStrings": {
+  "DefaultConnection": "Server=localhost;Database=cake_shop_db;Trusted_Connection=True;TrustServerCertificate=True;"
+}
+```
+3. Натисни **F5** щоб запустити сервер
+4. Сервер буде доступний на `http://localhost:5023`
+
+## Налаштування фронтенду
+1. Відкрий термінал у папці `sweetVenom/bakery-management-system`
+2. Виконай:
+```bash
+npm install
+npm run dev
+```
+3. Відкрий браузер на `http://localhost:5173`
+
+## Зображення
+Всі зображення тортів знаходяться у папці `sweetVenom/bakery-management-system/public/images/`
+
 ---
 
 ## Project Structure
