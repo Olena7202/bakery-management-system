@@ -5,6 +5,21 @@ const CAKE_CUSTOMIZATIONS_KEY = "bakery_cake_customizations";
 const CONFECTIONER_CAKES_KEY = "bakery_confectioner_cakes";
 const CONFECTIONER_CAKE_EDITS_KEY = "bakery_confectioner_cake_edits";
 
+function readJsonArray(key) {
+    const raw = localStorage.getItem(key);
+    if (!raw) return [];
+    try {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch {
+        return [];
+    }
+}
+
+function writeJsonArray(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+}
+
 function pickDefaultCakeIds(cakes, userId) {
     if (!Array.isArray(cakes) || cakes.length === 0) return [];
     const sorted = [...cakes].sort((a, b) => Number(a.id) - Number(b.id));
