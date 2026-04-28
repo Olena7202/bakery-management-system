@@ -41,12 +41,21 @@ public class CakesController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, Cake cake)
     {
-        if (id != cake.Id)
-        {
-            return BadRequest();
-        }
+        cake.Id = id;
 
-        _context.Entry(cake).State = EntityState.Modified;
+        var existing = await _context.Cakes.FindAsync(id);
+        if (existing == null) return NotFound();
+
+        existing.Name = cake.Name ?? existing.Name;
+        existing.Description = cake.Description ?? existing.Description;
+        existing.BasePrice = cake.BasePrice != 0 ? cake.BasePrice : existing.BasePrice;
+        existing.Weight = cake.Weight ?? existing.Weight;
+        existing.PhotoUrl = cake.PhotoUrl ?? existing.PhotoUrl;
+        existing.Ingredients = cake.Ingredients ?? existing.Ingredients;
+        existing.IsAvailable = cake.IsAvailable ?? existing.IsAvailable;
+        existing.IsCustomizable = cake.IsCustomizable ?? existing.IsCustomizable;
+        existing.CategoryId = existing.CategoryId ?? existing.CategoryId;
+
         await _context.SaveChangesAsync();
         return NoContent();
     }
