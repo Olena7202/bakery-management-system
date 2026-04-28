@@ -5,21 +5,6 @@ const CAKE_CUSTOMIZATIONS_KEY = "bakery_cake_customizations";
 const CONFECTIONER_CAKES_KEY = "bakery_confectioner_cakes";
 const CONFECTIONER_CAKE_EDITS_KEY = "bakery_confectioner_cake_edits";
 
-function readJsonArray(key) {
-    const raw = localStorage.getItem(key);
-    if (!raw) return [];
-    try {
-        const parsed = JSON.parse(raw);
-        return Array.isArray(parsed) ? parsed : [];
-    } catch {
-        return [];
-    }
-}
-
-function writeJsonArray(key, value) {
-    localStorage.setItem(key, JSON.stringify(value));
-}
-
 function pickDefaultCakeIds(cakes, userId) {
     if (!Array.isArray(cakes) || cakes.length === 0) return [];
     const sorted = [...cakes].sort((a, b) => Number(a.id) - Number(b.id));
@@ -47,11 +32,7 @@ export function saveConfectionerCakeIds(userId, cakeIds) {
 }
 
 export function ensureConfectionerCakeIds(userId, allCakes) {
-    const existing = getConfectionerCakeIds(userId);
-    if (existing.length > 0) return existing;
-    const defaults = pickDefaultCakeIds(allCakes, userId);
-    saveConfectionerCakeIds(userId, defaults);
-    return defaults;
+    return allCakes.map(cake => cake.id);
 }
 
 export function getConfectionerCakeEdits(userId) {
@@ -62,45 +43,17 @@ export function getConfectionerCakeEdits(userId) {
 }
 
 export function applyConfectionerCakeEdits(userId, cakes) {
-    const edits = getConfectionerCakeEdits(userId);
-    if (edits.length === 0) return cakes;
-    const editsMap = new Map(edits.map((item) => [Number(item.cakeId), item]));
-    return cakes.map((cake) => {
-        const edit = editsMap.get(Number(cake.id));
-        return edit ? { ...cake, ...edit.patch } : cake;
-    });
+    return cakes;
 }
 
-export function saveConfectionerCakeEdit(userId, cakeId, patch) {
-    if (!userId || !cakeId) return null;
-    const edits = readJsonArray(CONFECTIONER_CAKE_EDITS_KEY);
-    const next = [
-        {
-            userId,
-            cakeId,
-            patch,
-            updatedAt: new Date().toISOString()
-        },
-        ...edits.filter(
-            (item) =>
-                !(Number(item.userId) === Number(userId) && Number(item.cakeId) === Number(cakeId))
-        )
-    ];
-    writeJsonArray(CONFECTIONER_CAKE_EDITS_KEY, next);
-    return patch;
+export async function saveConfectionerCakeEdit(userId, cakeId, patch) {
+    console.log('Saving cake edit:', cakeId, patch);
+    const response = await api.put(`/cakes/${cakeId}`, { id: cakeId, ...patch });
+    return response.data;
 }
 
-export function removeConfectionerCake(userId, cakeId) {
-    if (!userId || !cakeId) return;
-    const ids = getConfectionerCakeIds(userId).filter((id) => Number(id) !== Number(cakeId));
-    saveConfectionerCakeIds(userId, ids);
-
-    const edits = readJsonArray(CONFECTIONER_CAKE_EDITS_KEY);
-    const nextEdits = edits.filter(
-        (item) =>
-            !(Number(item.userId) === Number(userId) && Number(item.cakeId) === Number(cakeId))
-    );
-    writeJsonArray(CONFECTIONER_CAKE_EDITS_KEY, nextEdits);
+export async function removeConfectionerCake(userId, cakeId) {
+    await api.delete(`/cakes/${cakeId}`);
 }
 
 export async function getCakes() {
