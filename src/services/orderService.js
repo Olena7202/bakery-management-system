@@ -11,7 +11,7 @@ export async function getOrdersByClient(clientId) {
 }
 
 export async function createOrder(order) {
-    const response = await api.get('/orders', order);
+    const response = await api.post('/orders', order);
     return response.data;
 }
 

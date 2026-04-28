@@ -10,6 +10,7 @@ export default function Auth() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [telegram, setTelegram] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
   async function handleSubmit(event) {
@@ -27,7 +28,7 @@ export default function Auth() {
       return;
     }
 
-    const result = await registerUser({ fullName, email, password, role });
+    const result = await registerUser({ fullName, email, password, role, telegram });
     if (!result.ok) {
       setErrorMessage(result.message);
       return;
@@ -124,6 +125,21 @@ export default function Auth() {
                 </div>
               )}
 
+              {!isLogin && role === "confectioner" && (
+                <>
+                  <div className="field-group">
+                    <label htmlFor="telegram">Telegram (username або посилання)</label>
+                    <input
+                      id="telegram"
+                      type="text"
+                      placeholder="@cake_master"
+                      value={telegram}
+                      onChange={(event) => setTelegram(event.target.value)}
+                    />
+                  </div>
+                </>
+              )}
+
               {errorMessage && <p className="form-error">{errorMessage}</p>}
 
               <button className="form-submit" type="submit">
@@ -133,7 +149,10 @@ export default function Auth() {
 
             <p className="switch-auth">
               {isLogin ? "Ще не маєте акаунта?" : "Вже маєте акаунт?"}
-              <button type="button" onClick={() => setIsLogin(!isLogin)}>
+              <button type="button" onClick={() => {
+                setIsLogin(!isLogin);
+                setErrorMessage("");
+              }}>
                 {isLogin ? " Зареєструватися" : " Увійти"}
               </button>
             </p>

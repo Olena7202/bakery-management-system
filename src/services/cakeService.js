@@ -1,5 +1,108 @@
 import api from '../api/axiosConfig'
 
+const FAVORITE_CAKES_KEY = "bakery_favorite_cakes";
+const CAKE_CUSTOMIZATIONS_KEY = "bakery_cake_customizations";
+const CONFECTIONER_CAKES_KEY = "bakery_confectioner_cakes";
+const CONFECTIONER_CAKE_EDITS_KEY = "bakery_confectioner_cake_edits";
+
+function readJsonArray(key) {
+    const raw = localStorage.getItem(key);
+    if (!raw) return [];
+    try {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch {
+        return [];
+    }
+}
+
+function writeJsonArray(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+}
+
+function pickDefaultCakeIds(cakes, userId) {
+    if (!Array.isArray(cakes) || cakes.length === 0) return [];
+    const sorted = [...cakes].sort((a, b) => Number(a.id) - Number(b.id));
+    const offset = Math.abs(Number(userId) || 0) % sorted.length;
+    const rotated = [...sorted.slice(offset), ...sorted.slice(0, offset)];
+    return rotated.slice(0, Math.min(6, rotated.length)).map((cake) => cake.id);
+}
+
+export function getConfectionerCakeIds(userId) {
+    if (!userId) return [];
+    const mappings = readJsonArray(CONFECTIONER_CAKES_KEY);
+    const item = mappings.find((entry) => Number(entry.userId) === Number(userId));
+    return Array.isArray(item?.cakeIds) ? item.cakeIds : [];
+}
+
+export function saveConfectionerCakeIds(userId, cakeIds) {
+    if (!userId) return;
+    const mappings = readJsonArray(CONFECTIONER_CAKES_KEY);
+    const normalizedIds = Array.from(new Set((cakeIds || []).map((id) => Number(id)).filter(Boolean)));
+    const next = [
+        { userId, cakeIds: normalizedIds },
+        ...mappings.filter((entry) => Number(entry.userId) !== Number(userId))
+    ];
+    writeJsonArray(CONFECTIONER_CAKES_KEY, next);
+}
+
+export function ensureConfectionerCakeIds(userId, allCakes) {
+    const existing = getConfectionerCakeIds(userId);
+    if (existing.length > 0) return existing;
+    const defaults = pickDefaultCakeIds(allCakes, userId);
+    saveConfectionerCakeIds(userId, defaults);
+    return defaults;
+}
+
+export function getConfectionerCakeEdits(userId) {
+    if (!userId) return [];
+    return readJsonArray(CONFECTIONER_CAKE_EDITS_KEY).filter(
+        (item) => Number(item.userId) === Number(userId)
+    );
+}
+
+export function applyConfectionerCakeEdits(userId, cakes) {
+    const edits = getConfectionerCakeEdits(userId);
+    if (edits.length === 0) return cakes;
+    const editsMap = new Map(edits.map((item) => [Number(item.cakeId), item]));
+    return cakes.map((cake) => {
+        const edit = editsMap.get(Number(cake.id));
+        return edit ? { ...cake, ...edit.patch } : cake;
+    });
+}
+
+export function saveConfectionerCakeEdit(userId, cakeId, patch) {
+    if (!userId || !cakeId) return null;
+    const edits = readJsonArray(CONFECTIONER_CAKE_EDITS_KEY);
+    const next = [
+        {
+            userId,
+            cakeId,
+            patch,
+            updatedAt: new Date().toISOString()
+        },
+        ...edits.filter(
+            (item) =>
+                !(Number(item.userId) === Number(userId) && Number(item.cakeId) === Number(cakeId))
+        )
+    ];
+    writeJsonArray(CONFECTIONER_CAKE_EDITS_KEY, next);
+    return patch;
+}
+
+export function removeConfectionerCake(userId, cakeId) {
+    if (!userId || !cakeId) return;
+    const ids = getConfectionerCakeIds(userId).filter((id) => Number(id) !== Number(cakeId));
+    saveConfectionerCakeIds(userId, ids);
+
+    const edits = readJsonArray(CONFECTIONER_CAKE_EDITS_KEY);
+    const nextEdits = edits.filter(
+        (item) =>
+            !(Number(item.userId) === Number(userId) && Number(item.cakeId) === Number(cakeId))
+    );
+    writeJsonArray(CONFECTIONER_CAKE_EDITS_KEY, nextEdits);
+}
+
 export async function getCakes() {
     const response = await api.get('/cakes');
     return response.data;
@@ -16,22 +119,113 @@ export async function getCategories() {
 }
 
 export async function getBiscuits() {
-    const response = await api.get('/biscuits')
+    const response = await api.get('/biscuits');
+    return response.data;
 }
 
 export async function getCreams() {
-    const response = await api.get('/creams')
+    const response = await api.get('/creams');
+    return response.data;
 }
 
 export async function getSavedCakes(clientId) {
-    const response = api.get(`/savedcakes/client/${clientId}`);
-    return (await response).data;
+    try {
+        const response = await api.get(`/savedcakes/client/${clientId}`);
+        const remote = Array.isArray(response.data) ? response.data : [];
+        const local = getFavoriteCakesByClient(clientId);
+
+        const existingCakeIds = new Set(
+            remote.map((item) => item.cakeId ?? item.cake?.id).filter(Boolean)
+        );
+        const mergedLocal = local.filter((item) => !existingCakeIds.has(item.cakeId ?? item.cake?.id));
+
+        return [...remote, ...mergedLocal];
+    } catch {
+        return getFavoriteCakesByClient(clientId);
+    }
+}
+
+export function getFavoriteCakesByClient(clientId) {
+    return readJsonArray(FAVORITE_CAKES_KEY).filter(
+        (item) => Number(item.clientId) === Number(clientId)
+    );
+}
+
+export function saveFavoriteCake({ clientId, cake, customization = null }) {
+    const favorites = readJsonArray(FAVORITE_CAKES_KEY);
+    const exists = favorites.find(
+        (item) =>
+            Number(item.clientId) === Number(clientId) &&
+            Number(item.cakeId) === Number(cake.id)
+    );
+
+    if (exists) {
+        return { ok: true, alreadyExists: true, item: exists };
+    }
+
+    const item = {
+        id: Date.now(),
+        clientId,
+        cakeId: cake.id,
+        cake,
+        customization,
+        createdAt: new Date().toISOString()
+    };
+
+    writeJsonArray(FAVORITE_CAKES_KEY, [item, ...favorites]);
+    return { ok: true, alreadyExists: false, item };
+}
+
+export function removeFavoriteCake(clientId, cakeId) {
+    const favorites = readJsonArray(FAVORITE_CAKES_KEY);
+    const next = favorites.filter(
+        (item) =>
+            !(Number(item.clientId) === Number(clientId) && Number(item.cakeId) === Number(cakeId))
+    );
+    writeJsonArray(FAVORITE_CAKES_KEY, next);
+}
+
+export function saveCakeCustomization({ clientId, cakeId, biscuitId, biscuitName, creamId, creamName, totalPrice }) {
+    const all = readJsonArray(CAKE_CUSTOMIZATIONS_KEY);
+    const item = {
+        id: Date.now(),
+        clientId,
+        cakeId,
+        biscuitId: biscuitId ?? null,
+        biscuitName: biscuitName ?? "",
+        creamId: creamId ?? null,
+        creamName: creamName ?? "",
+        totalPrice,
+        updatedAt: new Date().toISOString()
+    };
+
+    const filtered = all.filter(
+        (entry) =>
+            !(Number(entry.clientId) === Number(clientId) && Number(entry.cakeId) === Number(cakeId))
+    );
+    writeJsonArray(CAKE_CUSTOMIZATIONS_KEY, [item, ...filtered]);
+    return item;
+}
+
+export function getCakeCustomization(clientId, cakeId) {
+    const all = readJsonArray(CAKE_CUSTOMIZATIONS_KEY);
+    return (
+        all.find(
+            (item) =>
+                Number(item.clientId) === Number(clientId) && Number(item.cakeId) === Number(cakeId)
+        ) ?? null
+    );
 }
 
 export async function saveCake(clientId, cakeId) {
-    const response = await api.get('/bsavedcakes', { clientId, cakeId });
+    return saveFavoriteCake({ clientId, cake: { id: cakeId } });
 }
 
-export async function unsaveCake() {
-    const response = await api.delete(`/savedcakes/${savedCakeId}`)
+export async function unsaveCake(savedCakeId) {
+    if (!savedCakeId) return;
+    try {
+        await api.delete(`/savedcakes/${savedCakeId}`);
+    } catch {
+        // Ignore in frontend-only mode.
+    }
 }

@@ -3,23 +3,48 @@ import Navbar from "../../components/NavBar/NavBar";
 import ProductCard from "../../components/ProductCard/ProductCard";
 import ProductModal from "../../components/ProductModal/ProductModal";
 import { getCakes } from "../../services/cakeService";
+import { products as fallbackProducts } from "../../data/products";
+
+function normalizeCake(cake) {
+  return {
+    ...cake,
+    photoUrl: cake.photoUrl || cake.image,
+    basePrice: cake.basePrice ?? cake.price,
+    isCustomizable: Boolean(cake.isCustomizable),
+    category:
+      typeof cake.category === "object"
+        ? cake.category
+        : { name: cake.category || "Dessert" },
+    ingredients: Array.isArray(cake.ingredients)
+      ? cake.ingredients.join(", ")
+      : cake.ingredients
+  };
+}
 
 export default function Home() {
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [activeProductId, setActiveProductId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    getCakes().then((data) => {
-      setProducts(data);
-      if (data.length > 0) setActiveProductId(data[0].id);
-      setLoading(false);
-    })
-    .catch((err) => {
-      console.error('Failed to fetch cakes:', err);
-      setLoading(false)
-    });
+    getCakes()
+      .then((data) => {
+        const normalized = (Array.isArray(data) ? data : []).map(normalizeCake);
+        setProducts(normalized);
+        if (normalized.length > 0) setActiveProductId(normalized[0].id);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch cakes:", err);
+        setErrorMessage("Не вдалося підключитися до каталогу. Показуємо локальні десерти.");
+        const localFallback = fallbackProducts.map(normalizeCake);
+        setProducts(localFallback);
+        if (localFallback.length > 0) setActiveProductId(localFallback[0].id);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   const activeProduct =
@@ -39,7 +64,35 @@ const handleProductClick = (product) => {
     setSelectedProduct(product);
 };
 
-  if(loading) return <div className="page"><Navbar /><p>Завантаження...</p></div>;
+  if (loading) {
+    return (
+      <div className="page home-page">
+        <div className="home-shell">
+          <Navbar />
+          <section className="hero home-skeleton-hero">
+            <div className="ui-skeleton ui-skeleton-title" />
+            <div className="ui-skeleton ui-skeleton-text" />
+            <div className="ui-skeleton ui-skeleton-text short" />
+          </section>
+          <section className="catalog-section">
+            <div className="products-grid">
+              {[1, 2, 3].map((item) => (
+                <div key={item} className="product-card home-skeleton-card">
+                  <div className="ui-skeleton ui-skeleton-media" />
+                  <div className="product-info">
+                    <div className="ui-skeleton ui-skeleton-line" />
+                    <div className="ui-skeleton ui-skeleton-line short" />
+                    <div className="ui-skeleton ui-skeleton-line" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      </div>
+    );
+  }
+  if (!activeProduct) return <div className="page"><Navbar /><p>Немає десертів для відображення.</p></div>;
 
   return (
     <div className="page home-page">
@@ -97,6 +150,7 @@ const handleProductClick = (product) => {
         </section>
 
         <section className="catalog-section" id="catalog">
+          {errorMessage ? <p className="ui-error-banner">{errorMessage}</p> : null}
           <div className="section-header">
             <div className="section-title-wrap">
               <h2>Меню десертів</h2>
