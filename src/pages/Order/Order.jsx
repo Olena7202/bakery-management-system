@@ -1,10 +1,76 @@
-import { Link, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../../components/NavBar/NavBar";
-import { products } from "../../data/products";
+import { getCakes } from "../../services/cakeService";
+import { createOrder } from "../../services/orderService";
+import { getCurrentUser } from "../../services/authStorage";
 
 export default function Order() {
   const location = useLocation();
+  const navigate = useNavigate();
   const draft = location.state?.orderDraft;
+  const user = getCurrentUser();
+
+  const [cakes, setCakes] = useState([]);
+  const [selectedCakeId, setSelectedCakeId] = useState(draft?.cakeId ?? "");
+  const [quantity, setQuantity] = useState(1);
+  const [date, setDate] = useState("");
+  const [comment, setComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  
+  useEffect(() => {
+    if(!draft) {
+      getCakes().then(setCakes);
+    }
+  }, []);
+
+  const selectedCake = cakes.find(c => c.id === Number(selectedCakeId));
+  const totalPrice = draft
+  ? draft.totalPrice * quantity
+  : (selectedCake?.basePrice ?? 0) * quantity;
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    setError("");
+
+    if(!user) {
+      navigate("/auth");
+      return;
+    }
+
+    const cakeId = draft ? draft.cakeId : Number(selectedCakeId);
+    if(!cakeId) {
+      setError("Оберіть десерт!");
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      await createOrder({
+        clientId: user.id,
+        note: comment,
+        totalPrice,
+        deliveryDate: date || null,
+        status: "Pending",
+        paymentStatus: "Unpaid",
+        orderItems: [{
+          cakeId,
+          biscuitId: draft?.biscuitId ?? null,
+          creamId: draft?.creamId ?? null,
+          quantity: Number(quantity),
+          itemPrice: draft ? draft.totalPrice : (selectedCake?.basePrice ?? 0)
+        }]
+      });
+
+      navigate("/client")
+    } catch(err) {
+      setError("Не вдалося оформити замовлення. Спробуйте ще раз.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   return (
     <div className="page">
@@ -68,17 +134,11 @@ export default function Order() {
                 )}
                 <p className="order-draft-total">
                   Орієнтовна сума: <strong>{draft.totalPrice} грн</strong>
-                  {Number(draft.basePrice) !== Number(draft.totalPrice) ? (
-                    <span className="order-draft-base">
-                      {" "}
-                      (база {draft.basePrice} грн + доплата за склад)
-                    </span>
-                  ) : null}
                 </p>
               </div>
             ) : null}
 
-            <form className="order-form">
+            <form className="order-form" onSubmit={handleSubmit}>
               <div className="field-group">
                 <label htmlFor="dessert">Десерт</label>
                 {draft ? (
@@ -91,13 +151,17 @@ export default function Order() {
                     </span>
                   </p>
                 ) : (
-                  <select id="dessert" name="dessert" defaultValue="">
+                  <select 
+                  id="dessert"
+                  value={selectedCakeId}
+                  onChange={(e) => setSelectedCakeId(e.target.value)}
+                  required>
                     <option value="" disabled>
                       Оберіть десерт
                     </option>
-                    {products.map((product) => (
-                      <option key={product.id} value={product.name}>
-                        {product.name}
+                    {cakes.map((cake) => (
+                      <option key={cake.id} value={cake.id}>
+                        {cake.name} - {cake.basePrice} грн
                       </option>
                     ))}
                   </select>
@@ -107,31 +171,53 @@ export default function Order() {
               <div className="form-row">
                 <div className="field-group">
                   <label htmlFor="quantity">Кількість</label>
-                  <input id="quantity" name="quantity" type="number" min="1" placeholder="1" />
+                  <input 
+                  id="quantity"
+                  type="number"
+                  min="1" 
+                  value={quantity}
+                  placeholder="1" 
+                  onChange={(e) => setQuantity(e.target.value)}
+                  required
+                  />
                 </div>
 
                 <div className="field-group">
                   <label htmlFor="date">Дата</label>
-                  <input id="date" name="date" type="date" />
+                  <input 
+                  id="date"
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)} 
+                  />
                 </div>
               </div>
 
-              <div className="field-group">
+              {/*<div className="field-group">
                 <label htmlFor="phone">Телефон</label>
                 <input id="phone" name="phone" type="tel" placeholder="+380 67 123 45 67" />
-              </div>
+              </div> */}
 
               <div className="field-group">
                 <label htmlFor="comment">Коментар для кондитера</label>
                 <textarea
                   id="comment"
-                  name="comment"
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
                   placeholder="Наприклад: менше цукру, напис на торті або пакування для подарунка"
                 />
               </div>
 
-              <button className="form-submit" type="submit">
-                Підтвердити замовлення
+              {totalPrice > 0 && (
+                <p className="order-draft-total">
+                  Сума: <strong>{totalPrice} грн</strong>
+                </p>
+              )}
+
+              {error && <p className="form-error">{error}</p>}
+
+              <button className="form-submit" type="submit" disabled={submitting}>
+                {submitting ? "Оформлення..." : "Підтвердити замовлення"}
               </button>
             </form>
           </section>
