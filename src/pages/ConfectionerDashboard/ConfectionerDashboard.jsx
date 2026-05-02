@@ -32,31 +32,31 @@ export default function ConfectionerDashboard() {
   const [cakeSort, setCakeSort] = useState("new");
   const [toastMessage, setToastMessage] = useState("");
 
-  useEffect(() => {
-    Promise.all([getOrders(), getCakes()])
-      .then(([ordersData, cakesData]) => {
-        const normalizedOrders = Array.isArray(ordersData) ? ordersData : [];
-        const normalizedCakes = Array.isArray(cakesData) ? cakesData : [];
-        const allowedCakeIds = ensureConfectionerCakeIds(confectioner?.id, normalizedCakes);
-        const ownedCakes = normalizedCakes.filter((cake) => allowedCakeIds.includes(Number(cake.id)));
-        const ownedCakesWithEdits = applyConfectionerCakeEdits(confectioner?.id, ownedCakes);
-        const ownedCakeIds = new Set(ownedCakesWithEdits.map((cake) => Number(cake.id)));
+useEffect(() => {
+  Promise.allSettled([getOrders(), getCakes()])
+    .then(([ordersResult, cakesResult]) => {
+      const normalizedOrders = ordersResult.status === "fulfilled" && Array.isArray(ordersResult.value)
+        ? ordersResult.value : [];
+      const normalizedCakes = cakesResult.status === "fulfilled" && Array.isArray(cakesResult.value)
+        ? cakesResult.value : [];
 
-        setOrders(
-          normalizedOrders.filter((order) => {
-            const orderCakeId = order.orderItems?.[0]?.cake?.id ?? order.cake?.id;
-            return orderCakeId ? ownedCakeIds.has(Number(orderCakeId)) : true;
-          })
-        );
-        setCakes(ownedCakesWithEdits);
-      })
-      .catch(() => {
-        setErrorMessage("Не вдалося завантажити дані кабінету кондитера.");
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, []);
+      const allowedCakeIds = ensureConfectionerCakeIds(confectioner?.id, normalizedCakes);
+      const ownedCakes = normalizedCakes.filter((cake) => allowedCakeIds.includes(Number(cake.id)));
+      const ownedCakesWithEdits = applyConfectionerCakeEdits(confectioner?.id, ownedCakes);
+      const ownedCakeIds = new Set(ownedCakesWithEdits.map((cake) => Number(cake.id)));
+
+      setOrders(
+        normalizedOrders.filter((order) => {
+          const orderCakeId = order.orderItems?.[0]?.cake?.id ?? order.cake?.id;
+          return orderCakeId ? ownedCakeIds.has(Number(orderCakeId)) : true;
+        })
+      );
+      setCakes(ownedCakesWithEdits);
+    })
+    .finally(() => {
+      setLoading(false);
+    });
+}, []);
 
   const handleStatusChange = async (orderId, status) => {
     try {
