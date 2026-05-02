@@ -13,6 +13,23 @@ function num(value) {
   return Number.isFinite(n) ? n : 0;
 }
 
+function parseWeightKg(value, fallback = 1) {
+  const raw = String(value ?? "").replace(",", ".").match(/[\d.]+/)?.[0];
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+  return parsed;
+}
+
+function formatWeightOption(value) {
+  return parseWeightKg(value, 1).toFixed(1);
+}
+
+function buildWeightOptions(baseWeightKg) {
+  const presets = ["0.5", "0.8", "1", "1.2", "1.5", "2", "2.5", "3"];
+  const merged = [formatWeightOption(baseWeightKg), ...presets.map(formatWeightOption)];
+  return Array.from(new Set(merged)).sort((a, b) => Number(a) - Number(b));
+}
+
 export default function ProductModal({ product, onClose }) {
   const navigate = useNavigate();
   const [showCustomizer, setShowCustomizer] = useState(false);
@@ -24,6 +41,8 @@ export default function ProductModal({ product, onClose }) {
   const [optionsLoading, setOptionsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [actionError, setActionError] = useState("");
+  const [weightValue, setWeightValue] = useState("1");
+  const [clientComment, setClientComment] = useState("");
   const currentUser = getCurrentUser();
 
   useEffect(() => {
@@ -37,7 +56,15 @@ export default function ProductModal({ product, onClose }) {
       setOptionsLoading(false);
       setSuccessMessage("");
       setActionError("");
+      setWeightValue("1");
+      setClientComment("");
     }
+  }, [product?.id]);
+
+  useEffect(() => {
+    if (!product) return;
+    setWeightValue(formatWeightOption(parseWeightKg(product.weight, 1)));
+    setClientComment("");
   }, [product?.id]);
 
   useEffect(() => {
@@ -89,11 +116,16 @@ export default function ProductModal({ product, onClose }) {
   );
 
   const basePrice = product ? num(product.basePrice ?? product.price) : 0;
+  const baseWeightKg = product ? parseWeightKg(product.weight, 1) : 1;
+  const weightOptions = useMemo(() => buildWeightOptions(baseWeightKg), [baseWeightKg]);
+  const selectedWeightKg = parseWeightKg(weightValue, baseWeightKg);
+  const weightAdjustedBasePrice = Math.round(basePrice * (selectedWeightKg / baseWeightKg));
+  const liveTotalPrice = Math.max(0, weightAdjustedBasePrice);
   const extrasTotal =
     showCustomizer && selectedBiscuit && selectedCream
       ? num(selectedBiscuit.extraPrice) + num(selectedCream.extraPrice)
       : 0;
-  const totalWithCustom = basePrice + extrasTotal;
+  const totalWithCustom = liveTotalPrice + extrasTotal;
   const canCustomize = biscuits.length > 0 && creams.length > 0;
 
   if (!product) {
@@ -103,7 +135,7 @@ export default function ProductModal({ product, onClose }) {
   const ingredients = Array.isArray(product.ingredients)
     ? product.ingredients
     : product.ingredients
-      ? product.ingredients.split(",")
+      ? String(product.ingredients).split(",")
       : [];
   const imageUrl = product.photoUrl || product.image;
 
@@ -113,13 +145,18 @@ export default function ProductModal({ product, onClose }) {
       cakeId: product.id,
       cakeName: product.name,
       basePrice,
+      baseWeightKg,
+      selectedWeightKg,
+      weightOptions,
       biscuitId: usedCustom && selectedBiscuit ? selectedBiscuit.id : null,
       creamId: usedCustom && selectedCream ? selectedCream.id : null,
       biscuitName: usedCustom ? (selectedBiscuit?.name ?? "") : "",
       creamName: usedCustom ? (selectedCream?.name ?? "") : "",
       extraBiscuit: usedCustom && selectedBiscuit ? num(selectedBiscuit.extraPrice) : 0,
       extraCream: usedCustom && selectedCream ? num(selectedCream.extraPrice) : 0,
-      totalPrice: usedCustom ? totalWithCustom : basePrice
+      weight: `${selectedWeightKg.toFixed(1)} кг`,
+      note: clientComment.trim(),
+      totalPrice: usedCustom ? totalWithCustom : liveTotalPrice
     };
     navigate("/order", { state: { orderDraft: draft } });
     onClose();
@@ -144,14 +181,15 @@ export default function ProductModal({ product, onClose }) {
       biscuitName: usedCustom ? selectedBiscuit?.name : "",
       creamId: usedCustom ? selectedCream?.id : null,
       creamName: usedCustom ? selectedCream?.name : "",
-      totalPrice: usedCustom ? totalWithCustom : basePrice
+      note: clientComment.trim(),
+      totalPrice: usedCustom ? totalWithCustom : liveTotalPrice
     });
 
     setActionError("");
     setSuccessMessage(
       customization.biscuitName || customization.creamName
-        ? "Зміни збережено. Цей склад підставиться для цього торта."
-        : "Зміни збережено (базовий склад)."
+        ? "Зміни збережено. Ці параметри підставляться для цього торта."
+        : "Зміни збережено."
     );
   }
 
@@ -165,7 +203,7 @@ export default function ProductModal({ product, onClose }) {
         id: product.id,
         name: product.name,
         photoUrl: imageUrl,
-        basePrice: usedCustom ? totalWithCustom : basePrice
+        basePrice: usedCustom ? totalWithCustom : liveTotalPrice
       },
       customization: usedCustom
         ? {
@@ -202,7 +240,7 @@ export default function ProductModal({ product, onClose }) {
           <strong>Ціна:</strong> {basePrice} грн
         </p>
         <p>
-          <strong>Вага:</strong> {product.weight ?? "—"}
+          <strong>Вага:</strong> {selectedWeightKg.toFixed(1)} кг
         </p>
 
         <h4 className="modal-composition-title">Склад торта</h4>
@@ -243,8 +281,24 @@ export default function ProductModal({ product, onClose }) {
           <section className="modal-customize" aria-labelledby="customize-heading">
             <h4 id="customize-heading">Що хочеш змінити</h4>
             <p className="modal-customize-hint">
-              Обери інший бісквіт або крем — до ціни торта додається доплата за варіант.
+              Обери вагу, бісквіт і крем. Ціна рахується автоматично.
             </p>
+
+            <div className="modal-field-group">
+              <label htmlFor="modal-weight">Вага торта</label>
+              <select
+                id="modal-weight"
+                className="modal-select"
+                value={weightValue}
+                onChange={(e) => setWeightValue(e.target.value)}
+              >
+                {weightOptions.map((weight) => (
+                  <option key={weight} value={weight}>
+                    {weight} кг
+                  </option>
+                ))}
+              </select>
+            </div>
 
             {optionsLoading ? <p className="modal-muted">Завантаження варіантів…</p> : null}
             {optionsError ? <p className="modal-error">{optionsError}</p> : null}
@@ -287,7 +341,21 @@ export default function ProductModal({ product, onClose }) {
                   <strong>Разом з обраними змінами:</strong> {totalWithCustom} грн
                 </p>
               </>
-            ) : null}
+            ) : (
+              <p className="modal-total-price">
+                <strong>Разом з обраними змінами:</strong> {liveTotalPrice} грн
+              </p>
+            )}
+
+            <div className="modal-field-group">
+              <label htmlFor="modal-client-comment">Коментар до торта</label>
+              <textarea
+                id="modal-client-comment"
+                value={clientComment}
+                onChange={(e) => setClientComment(e.target.value)}
+                placeholder="Наприклад: менше цукру, напис на торті, побажання до декору"
+              />
+            </div>
           </section>
         ) : null}
 
