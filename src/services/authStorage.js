@@ -24,12 +24,14 @@ export function getConfectionerProfile(userId) {
   return profiles.find((item) => Number(item.userId) === Number(userId)) ?? null;
 }
 
-export function saveConfectionerProfile({ userId, telegram = "" }) {
+export function saveConfectionerProfile({ userId, telegram = "", phone = "" }) {
   if (!userId) return null;
   const profiles = readProfiles();
+  const existing = profiles.find((item) => Number(item.userId) === Number(userId));
   const profile = {
     userId,
-    telegram: (telegram || "").trim()
+    telegram: (telegram ?? existing?.telegram ?? "").trim(),
+    phone: (phone ?? existing?.phone ?? "").trim(),
   };
   const next = [
     profile,
@@ -110,7 +112,8 @@ export async function loginUser({ email, password }) {
       fullName: name,
       email,
       role: role.toLowerCase(),
-      telegram: savedProfile?.telegram || ""
+      telegram: savedProfile?.telegram || "",
+      phone: savedProfile?.phone || "",
     };
     localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
 
