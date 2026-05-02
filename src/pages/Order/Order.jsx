@@ -1,7 +1,6 @@
-import { startTransition, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../../components/NavBar/NavBar";
-import SiteFooter from "../../components/SiteFooter/SiteFooter";
 import { products } from "../../data/products";
 import { createOrder } from "../../services/orderService";
 import { getCurrentUser } from "../../services/authStorage";
@@ -100,12 +99,8 @@ export default function Order() {
 
   useEffect(() => {
     let cancelled = false;
-    startTransition(() => {
-      if (!cancelled) {
-        setOptionsLoading(true);
-        setOptionsError("");
-      }
-    });
+    setOptionsLoading(true);
+    setOptionsError("");
 
     Promise.all([getBiscuits(), getCreams()])
       .then(([biscuitsData, creamsData]) => {
@@ -130,7 +125,6 @@ export default function Order() {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- load biscuits/creams once on mount
   }, []);
 
   const weightOptions = useMemo(
@@ -468,7 +462,6 @@ export default function Order() {
           </section>
         </div>
       </div>
-      <SiteFooter />
     </div>
   );
 }

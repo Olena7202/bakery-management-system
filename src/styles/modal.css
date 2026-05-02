@@ -13,13 +13,11 @@
 .modal-content {
   position: relative;
   width: min(600px, 100%);
-  max-height: 90vh;
-  overflow-x: hidden;
-  overflow-y: auto;
+  max-height: 90vh; 
+  overflow-y: auto; 
   scrollbar-gutter: stable;
-  scroll-padding-bottom: 24px;
 
-  padding: 24px 20px 40px 26px;
+  padding: 24px;
   border: 1px solid rgba(255, 255, 255, 0.54);
   border-radius: 32px;
   background: rgba(255, 251, 248, 0.98);
@@ -27,28 +25,27 @@
 
   /* Firefox */
   scrollbar-width: thin;
-  scrollbar-color: rgba(176, 130, 120, 0.42) rgba(255, 251, 248, 0.4);
+  scrollbar-color: rgba(200, 150, 140, 0.6) transparent;
 }
 
 /* Chrome / Edge */
 .modal-content::-webkit-scrollbar {
-  width: 10px;
+  width: 8px;
 }
 
 .modal-content::-webkit-scrollbar-track {
-  margin: 10px 0 14px;
-  background: rgba(255, 248, 244, 0.65);
+  background: rgba(225, 190, 182, 0.18);
   border-radius: 999px;
 }
 
 .modal-content::-webkit-scrollbar-thumb {
-  background: rgba(168, 118, 108, 0.4);
+  background: rgba(176, 118, 106, 0.58);
   border-radius: 999px;
-  border: 3px solid rgba(255, 251, 248, 0.98);
+  border: 2px solid rgba(255, 251, 248, 0.95);
 }
 
 .modal-content::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 96, 86, 0.62);
+  background: rgba(160, 102, 90, 0.9);
 }
 
 .modal-content::-webkit-scrollbar-button {
@@ -117,6 +114,10 @@
   margin: 0 0 8px;
 }
 
+.modal-change-row {
+  margin: 16px 0 4px;
+}
+
 .modal-change-btn {
   display: inline-flex;
   align-items: center;
@@ -143,12 +144,6 @@
   border-color: rgba(180, 140, 130, 0.45);
   font-weight: 500;
   color: var(--muted);
-}
-
-.modal-actions-top .modal-change-btn--in-actions {
-  width: 100%;
-  min-height: 44px;
-  box-sizing: border-box;
 }
 
 .modal-price-line {
@@ -217,12 +212,12 @@
 
 .modal-actions {
   display: grid;
-  gap: 12px;
+  gap: 10px;
   margin-top: 22px;
   position: sticky;
-  bottom: 0;
-  padding: 14px 0 6px;
-  background: linear-gradient(180deg, rgba(255, 251, 248, 0), rgba(255, 251, 248, 0.97) 28%);
+  bottom: -1px;
+  padding-top: 10px;
+  background: linear-gradient(180deg, rgba(255, 251, 248, 0.08), rgba(255, 251, 248, 0.98) 35%);
 }
 
 .modal-actions-top {
@@ -283,7 +278,7 @@
   }
 
   .modal-content {
-    padding: 18px 16px 32px 18px;
+    padding: 18px;
     border-radius: 24px;
   }
 

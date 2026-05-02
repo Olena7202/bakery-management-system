@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import Navbar from "../../components/NavBar/NavBar";
-import SiteFooter from "../../components/SiteFooter/SiteFooter";
 import ProductCard from "../../components/ProductCard/ProductCard";
 import ProductModal from "../../components/ProductModal/ProductModal";
 import { getCakes } from "../../services/cakeService";
@@ -89,22 +88,11 @@ const handleProductClick = (product) => {
               ))}
             </div>
           </section>
-          <SiteFooter />
         </div>
       </div>
     );
   }
-  if (!activeProduct) {
-    return (
-      <div className="page home-page">
-        <div className="home-shell">
-          <Navbar />
-          <p style={{ padding: "24px 36px" }}>Немає десертів для відображення.</p>
-          <SiteFooter />
-        </div>
-      </div>
-    );
-  }
+  if (!activeProduct) return <div className="page"><Navbar /><p>Немає десертів для відображення.</p></div>;
 
   return (
     <div className="page home-page">
@@ -196,11 +184,9 @@ const handleProductClick = (product) => {
             ))}
           </div>
         </section>
-        <SiteFooter />
       </div>
 
       <ProductModal
-        key={selectedProduct?.id ?? "closed"}
         product={selectedProduct}
         onClose={() => setSelectedProduct(null)}
       />

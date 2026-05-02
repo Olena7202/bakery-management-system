@@ -1,4 +1,4 @@
-import { startTransition, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   getBiscuits,
@@ -41,11 +41,31 @@ export default function ProductModal({ product, onClose }) {
   const [optionsLoading, setOptionsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [actionError, setActionError] = useState("");
-  const [weightValue, setWeightValue] = useState(() =>
-    product ? formatWeightOption(parseWeightKg(product.weight, 1)) : "1"
-  );
+  const [weightValue, setWeightValue] = useState("1");
   const [clientComment, setClientComment] = useState("");
   const currentUser = getCurrentUser();
+
+  useEffect(() => {
+    if (!product) {
+      setShowCustomizer(false);
+      setBiscuits([]);
+      setCreams([]);
+      setBiscuitId("");
+      setCreamId("");
+      setOptionsError("");
+      setOptionsLoading(false);
+      setSuccessMessage("");
+      setActionError("");
+      setWeightValue("1");
+      setClientComment("");
+    }
+  }, [product?.id]);
+
+  useEffect(() => {
+    if (!product) return;
+    setWeightValue(formatWeightOption(parseWeightKg(product.weight, 1)));
+    setClientComment("");
+  }, [product?.id]);
 
   useEffect(() => {
     if (!product || !showCustomizer) {
@@ -53,12 +73,8 @@ export default function ProductModal({ product, onClose }) {
     }
 
     let cancelled = false;
-    startTransition(() => {
-      if (!cancelled) {
-        setOptionsLoading(true);
-        setOptionsError("");
-      }
-    });
+    setOptionsLoading(true);
+    setOptionsError("");
 
     Promise.all([getBiscuits(), getCreams()])
       .then(([bList, cList]) => {
@@ -88,8 +104,6 @@ export default function ProductModal({ product, onClose }) {
     return () => {
       cancelled = true;
     };
-    // Fetch options by cake id; full product object not needed for this request.
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- product?.id + showCustomizer drive refetch
   }, [product?.id, showCustomizer]);
 
   const selectedBiscuit = useMemo(
@@ -215,7 +229,7 @@ export default function ProductModal({ product, onClose }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(event) => event.stopPropagation()}>
-        <button className="close-btn" onClick={onClose} type="button" aria-label="Закрити">
+        <button className="close-btn" onClick={onClose} type="button">
           ×
         </button>
 
@@ -239,6 +253,29 @@ export default function ProductModal({ product, onClose }) {
         ) : (
           <p className="modal-muted">Детальний склад з&apos;явиться пізніше або уточни в коментарі до замовлення.</p>
         )}
+
+        <div className="modal-change-row">
+          {!showCustomizer ? (
+            <button
+              type="button"
+              className="modal-change-btn"
+              onClick={() => setShowCustomizer(true)}
+            >
+              Змінити щось
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="modal-change-btn modal-change-btn-muted"
+              onClick={() => {
+                setShowCustomizer(false);
+                setOptionsError("");
+              }}
+            >
+              Сховати зміни
+            </button>
+          )}
+        </div>
 
         {showCustomizer ? (
           <section className="modal-customize" aria-labelledby="customize-heading">
@@ -324,26 +361,9 @@ export default function ProductModal({ product, onClose }) {
 
         <div className="modal-actions">
           <div className="modal-actions-top">
-            {!showCustomizer ? (
-              <button
-                type="button"
-                className="modal-change-btn modal-change-btn--in-actions"
-                onClick={() => setShowCustomizer(true)}
-              >
-                Змінити щось
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="modal-change-btn modal-change-btn-muted modal-change-btn--in-actions"
-                onClick={() => {
-                  setShowCustomizer(false);
-                  setOptionsError("");
-                }}
-              >
-                Сховати зміни
-              </button>
-            )}
+            <button type="button" className="modal-secondary-btn" onClick={onClose}>
+              Закрити
+            </button>
             <button type="button" className="modal-secondary-btn" onClick={handleSaveChanges}>
               Зберегти зміни
             </button>
