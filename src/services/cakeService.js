@@ -20,14 +20,6 @@ function writeJsonArray(key, value) {
     localStorage.setItem(key, JSON.stringify(value));
 }
 
-function pickDefaultCakeIds(cakes, userId) {
-    if (!Array.isArray(cakes) || cakes.length === 0) return [];
-    const sorted = [...cakes].sort((a, b) => Number(a.id) - Number(b.id));
-    const offset = Math.abs(Number(userId) || 0) % sorted.length;
-    const rotated = [...sorted.slice(offset), ...sorted.slice(0, offset)];
-    return rotated.slice(0, Math.min(6, rotated.length)).map((cake) => cake.id);
-}
-
 export function getConfectionerCakeIds(userId) {
     if (!userId) return [];
     const mappings = readJsonArray(CONFECTIONER_CAKES_KEY);
@@ -69,6 +61,11 @@ export async function saveConfectionerCakeEdit(userId, cakeId, patch) {
 
 export async function removeConfectionerCake(userId, cakeId) {
     await api.delete(`/cakes/${cakeId}`);
+}
+
+export async function createCake(cake) {
+    const response = await api.post('/cakes', cake);
+    return response.data;
 }
 
 export async function getCakes() {

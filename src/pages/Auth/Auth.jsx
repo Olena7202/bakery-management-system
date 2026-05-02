@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/NavBar/NavBar";
+import SiteFooter from "../../components/SiteFooter/SiteFooter";
 import { getDashboardPathByRole, loginUser, registerUser } from "../../services/authStorage";
 
 export default function Auth() {
@@ -159,6 +160,7 @@ export default function Auth() {
           </section>
         </div>
       </div>
+      <SiteFooter />
     </div>
   );
 }
