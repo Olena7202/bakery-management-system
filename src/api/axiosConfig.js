@@ -5,12 +5,8 @@ const baseURL = import.meta.env.DEV
   : (import.meta.env.VITE_API_URL || "http://localhost:5023/api").replace(/\/$/, "");
 
 const api = axios.create({
-  baseURL,
-  headers: {
-    "Cache-Control": "no-cache",
-    Pragma: "no-cache",
-    Expires: "0",
-  },
+    baseURL: 'http://localhost:5023/api',
+    
 });
 
 api.interceptors.request.use((config) => {

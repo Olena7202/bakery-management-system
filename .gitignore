@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+sweetVenomServer/.vs/
+sweetVenomServer/sweetVenomServer/bin/
+sweetVenomServer/sweetVenomServer/obj/

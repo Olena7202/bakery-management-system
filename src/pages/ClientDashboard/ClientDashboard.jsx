@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getCurrentUser } from "../../services/authStorage";
 import { removeFavoriteCake } from "../../services/cakeService";
-import { useClientOrdersData } from "../../hooks/useClientOrders";
+import { getOrdersByClient } from "../../services/orderService";
+import { getSavedCakes } from "../../services/cakeService";
 import { statusMeta, normalizeStatus, formatDate } from "../../utils/orderViewModel";
 
 function OrderDistribution({ orders }) {
@@ -99,17 +100,37 @@ export default function ClientDashboard() {
   const navigate = useNavigate();
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [selectedOrderIndex, setSelectedOrderIndex] = useState(null);
-  const [savedCakesTick, setSavedCakesTick] = useState(0);
   const user = getCurrentUser();
-  const { orders, savedCakes } = useClientOrdersData(user?.id, savedCakesTick);
+  const [orders, setOrders] = useState([]);
+  const [savedCakes, setSavedCakes] = useState([]);
+  const [loading, setLoading] = useState(Boolean(user));
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const activeOrders = orders.filter((order) => normalizeStatus(order.status) !== "Delivered").length;
-  const completedOrders = orders.filter((order) => normalizeStatus(order.status) === "Delivered").length;
+  useEffect(() => {
+    if (!user) return;
+    
+    Promise.all([getOrdersByClient(user.id), getSavedCakes(user.id)])
+      .then(([ordersData, savedData]) => {
+        setOrders(Array.isArray(ordersData) ? ordersData : []);
+        setSavedCakes(Array.isArray(savedData) ? savedData : []);
+      })
+      .catch((err) => {
+        console.error('Error fetching dashboard data:', err);
+        setErrorMessage("Не вдалося завантажити дані кабінету.");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [user?.id]);
+
+  const userName = user?.fullName || "Гість";
+  const userEmail = user?.email || "email not set";
+  const activeOrdersCount = orders.filter((order) => order.status !== "Delivered").length;
 
   function handleRemoveSaved(cake) {
     if (!user?.id || cake?.id == null) return;
     removeFavoriteCake(user.id, cake.id);
-    setSavedCakesTick((n) => n + 1);
+    setSavedCakes((prev) => prev.filter((c) => c.id !== cake.id));
   }
 
   function handleOrderCake(cake) {
@@ -140,6 +161,23 @@ export default function ClientDashboard() {
     setSelectedOrderIndex(null);
   }
 
+  function handleRepeatOrder(order) {
+  const cake = order.orderItems?.[0]?.cake || order.cake || null;
+  const draft = {
+    cakeId: cake?.id ?? null,
+    cakeName: cake?.name || order.item || "Торт із попереднього замовлення",
+    basePrice: Number(cake?.basePrice ?? order.totalPrice ?? order.total ?? 0),
+    biscuitId: order.orderItems?.[0]?.biscuitId ?? null,
+    creamId: order.orderItems?.[0]?.creamId ?? null,
+    biscuitName: order.orderItems?.[0]?.biscuit?.name ?? "",
+    creamName: order.orderItems?.[0]?.cream?.name ?? "",
+    extraBiscuit: 0,
+    extraCream: 0,
+    totalPrice: Number(order.totalPrice ?? order.total ?? cake?.basePrice ?? 0),
+  };
+  navigate("/order", { state: { orderDraft: draft } });
+}
+
   if (!user) {
     return null;
   }
@@ -166,11 +204,11 @@ export default function ClientDashboard() {
       <section className="client-stats-grid" aria-label="Моя статистика">
         <article className="client-stat-tile">
           <span>Активні замовлення</span>
-          <strong>{activeOrders}</strong>
+          <strong>{activeOrdersCount}</strong>
         </article>
         <article className="client-stat-tile">
           <span>Виконані замовлення</span>
-          <strong>{completedOrders}</strong>
+          <strong>{orders.filter(o => normalizeStatus(o.status) === "Delivered").length}</strong>
         </article>
         <article className="client-stat-tile">
           <span>Збережені торти</span>
