@@ -52,9 +52,17 @@ export function getCurrentUser() {
   }
 }
 
-export function updateCurrentUser(patch) {
+export async function updateCurrentUser(patch) {
   const current = getCurrentUser();
   if (!current) return null;
+
+  await api.put('/auth/profile', {
+    id: current.id,
+    name: patch.fullName,
+    email: patch.email,
+    phone: patch.phone
+  });
+
   const updated = { ...current, ...patch };
   localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updated));
   return updated;

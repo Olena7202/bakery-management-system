@@ -54,7 +54,7 @@ public class CakesController : ControllerBase
         existing.Ingredients = cake.Ingredients ?? existing.Ingredients;
         existing.IsAvailable = cake.IsAvailable ?? existing.IsAvailable;
         existing.IsCustomizable = cake.IsCustomizable ?? existing.IsCustomizable;
-        existing.CategoryId = existing.CategoryId ?? existing.CategoryId;
+        existing.CategoryId = cake.CategoryId ?? existing.CategoryId;
 
         await _context.SaveChangesAsync();
         return NoContent();

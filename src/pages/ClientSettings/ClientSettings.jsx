@@ -14,15 +14,19 @@ export default function ClientSettings() {
     return null;
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
-    updateCurrentUser({
-      fullName: fullName.trim(),
-      email: email.trim(),
-      phone: phone.trim(),
-    });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2400);
+    try {
+      await updateCurrentUser({
+        fullName: fullName.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2400);
+    } catch {
+      // handle error if needed
+    }
   }
 
   return (
