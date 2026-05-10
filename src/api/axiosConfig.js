@@ -5,8 +5,7 @@ const baseURL = import.meta.env.DEV
   : (import.meta.env.VITE_API_URL || "http://localhost:5023/api").replace(/\/$/, "");
 
 const api = axios.create({
-    baseURL: 'http://localhost:5023/api',
-    
+  baseURL: import.meta.env.VITE_API_URL
 });
 
 api.interceptors.request.use((config) => {
