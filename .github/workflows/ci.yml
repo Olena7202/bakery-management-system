@@ -22,13 +22,13 @@ jobs:
           dotnet-version: 9.0.x
 
       - name: Restore dependencies
-        run: dotnet restore bakery-management-system/sweetVenomServer/sweetVenomServer/sweetVenomServer.csproj
+        run: dotnet restore sweetVenomServer/sweetVenomServer/sweetVenomServer.csproj
 
       - name: Build backend
-        run: dotnet build bakery-management-system/sweetVenomServer/sweetVenomServer/sweetVenomServer.csproj --no-restore --configuration Release
+        run: dotnet build sweetVenomServer/sweetVenomServer/sweetVenomServer.csproj --no-restore --configuration Release
 
       - name: Run tests
-        run: dotnet test bakery-management-system/sweetVenomServer.Tests/sweetVenomServer.Tests/sweetVenomServer.Tests.csproj --configuration Release --verbosity normal
+        run: dotnet test sweetVenomServer.Tests/sweetVenomServer.Tests/sweetVenomServer.Tests.csproj --configuration Release --verbosity normal
 
   # ─── Frontend ──────────────────────────────────────────
   frontend:
@@ -44,14 +44,12 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
-        working-directory: frontend
 
       - name: Build React app
         run: npm run build
-        working-directory: frontend
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
