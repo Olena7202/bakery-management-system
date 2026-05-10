@@ -1,0 +1,57 @@
+name: CI — Build & Test
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  # ─── Backend ───────────────────────────────────────────
+  backend:
+    name: Build & Test Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore bakery-management-system/sweetVenomServer/sweetVenomServer/sweetVenomServer.csproj
+
+      - name: Build backend
+        run: dotnet build bakery-management-system/sweetVenomServer/sweetVenomServer/sweetVenomServer.csproj --no-restore --configuration Release
+
+      - name: Run tests
+        run: dotnet test bakery-management-system/sweetVenomServer.Tests/sweetVenomServer.Tests/sweetVenomServer.Tests.csproj --configuration Release --verbosity normal
+
+  # ─── Frontend ──────────────────────────────────────────
+  frontend:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: frontend
+
+      - name: Build React app
+        run: npm run build
+        working-directory: frontend
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
