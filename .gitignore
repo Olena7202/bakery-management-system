@@ -23,6 +23,11 @@ dist-ssr
 *.sln
 *.sw?
 
-sweetVenomServer/.vs/
+# Visual Studio cache
+**/.vs/
+
+# Build output
 sweetVenomServer/sweetVenomServer/bin/
 sweetVenomServer/sweetVenomServer/obj/
+sweetVenomServer.Tests/sweetVenomServer.Tests/bin/
+sweetVenomServer.Tests/sweetVenomServer.Tests/obj/
