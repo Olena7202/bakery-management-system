@@ -28,8 +28,7 @@ jobs:
         run: dotnet build sweetVenomServer/sweetVenomServer/sweetVenomServer.csproj --no-restore --configuration Release
 
       - name: Run tests
-        run: dotnet test sweetVenomServer.Tests/sweetVenomServer.Tests/sweetVenomServer.Tests.csproj --configuration Release --verbosity normal
-
+        run: dotnet test sweetVenomServer.Tests/sweetVenomServer.Tests.csproj --configuration Release --verbosity normal
   # ─── Frontend ──────────────────────────────────────────
   frontend:
     name: Build Frontend
