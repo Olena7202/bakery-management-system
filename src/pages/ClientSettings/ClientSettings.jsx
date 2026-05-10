@@ -29,6 +29,8 @@ export default function ClientSettings() {
     }
   }
 
+  
+
   return (
     <main className="client-settings-page">
       <div className="profile-settings-inner">

@@ -56,6 +56,20 @@ public class AuthController : ControllerBase
         return Ok(new {token, role = user.Role, userId = user.Id, name = user.Name});
     }
 
+    [HttpPut("profile")]
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto dto)
+    {
+        var user = await _context.Users.FindAsync(dto.Id);
+        if (user == null) return NotFound();
+
+        user.Name = dto.Name?.Trim() ?? user.Name;
+        user.Email = dto.Email?.Trim() ?? user.Email;
+        user.Phone = dto.Phone?.Trim() ?? user.Phone;
+
+        await _context.SaveChangesAsync();
+        return Ok(new { message = "Profile updated!" });
+    }
+
     private string GenerateToken(User user)
     {
         var claims = new[]
