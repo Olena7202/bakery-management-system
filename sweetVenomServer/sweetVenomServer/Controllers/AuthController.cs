@@ -29,6 +29,8 @@ public class AuthController : ControllerBase
             return BadRequest("Email already exists!");
         }
 
+
+        // trigger redeploy
         
         var user = new User
         {
