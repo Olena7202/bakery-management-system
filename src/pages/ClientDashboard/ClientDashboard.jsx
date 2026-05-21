@@ -30,6 +30,10 @@ function OrderDistribution({ orders }) {
   const circumference = 2 * Math.PI * radius;
   let used = 0;
 
+  function getOrderCake(order) {
+    return order.orderItems?.[0]?.cake ?? null;
+  }
+
   return (
     <section className="client-panel client-distribution-panel">
       <h3>Розподіл замовлень</h3>
@@ -108,7 +112,7 @@ export default function ClientDashboard() {
 
   useEffect(() => {
     if (!user) return;
-    
+
     Promise.all([getOrdersByClient(user.id), getSavedCakes(user.id)])
       .then(([ordersData, savedData]) => {
         setOrders(Array.isArray(ordersData) ? ordersData : []);
@@ -162,21 +166,21 @@ export default function ClientDashboard() {
   }
 
   function handleRepeatOrder(order) {
-  const cake = order.orderItems?.[0]?.cake || order.cake || null;
-  const draft = {
-    cakeId: cake?.id ?? null,
-    cakeName: cake?.name || order.item || "Торт із попереднього замовлення",
-    basePrice: Number(cake?.basePrice ?? order.totalPrice ?? order.total ?? 0),
-    biscuitId: order.orderItems?.[0]?.biscuitId ?? null,
-    creamId: order.orderItems?.[0]?.creamId ?? null,
-    biscuitName: order.orderItems?.[0]?.biscuit?.name ?? "",
-    creamName: order.orderItems?.[0]?.cream?.name ?? "",
-    extraBiscuit: 0,
-    extraCream: 0,
-    totalPrice: Number(order.totalPrice ?? order.total ?? cake?.basePrice ?? 0),
-  };
-  navigate("/order", { state: { orderDraft: draft } });
-}
+    const cake = order.orderItems?.[0]?.cake || order.cake || null;
+    const draft = {
+      cakeId: cake?.id ?? null,
+      cakeName: cake?.name || order.item || "Торт із попереднього замовлення",
+      basePrice: Number(cake?.basePrice ?? order.totalPrice ?? order.total ?? 0),
+      biscuitId: order.orderItems?.[0]?.biscuitId ?? null,
+      creamId: order.orderItems?.[0]?.creamId ?? null,
+      biscuitName: order.orderItems?.[0]?.biscuit?.name ?? "",
+      creamName: order.orderItems?.[0]?.cream?.name ?? "",
+      extraBiscuit: 0,
+      extraCream: 0,
+      totalPrice: Number(order.totalPrice ?? order.total ?? cake?.basePrice ?? 0),
+    };
+    navigate("/order", { state: { orderDraft: draft } });
+  }
 
   if (!user) {
     return null;
@@ -319,7 +323,7 @@ export default function ClientDashboard() {
               x
             </button>
             <img
-              src={selectedOrder.cakeImage || "/images/your-custom-cake.jpg"}
+              src={getOrderCake(selectedOrder)?.photoUrl || "/images/your-custom-cake.jpg"}
               alt={selectedOrder.cakeName || "Замовлений торт"}
             />
             <div className="client-order-modal-body">
@@ -333,10 +337,9 @@ export default function ClientDashboard() {
               {selectedOrder.note ? <p>Коментар: {selectedOrder.note}</p> : null}
               <div className="client-order-modal-footer">
                 <span
-                  className={`client-status-badge ${
-                    statusMeta[normalizeStatus(selectedOrder.status)]?.className ||
+                  className={`client-status-badge ${statusMeta[normalizeStatus(selectedOrder.status)]?.className ||
                     statusMeta.Pending.className
-                  }`}
+                    }`}
                 >
                   {statusMeta[normalizeStatus(selectedOrder.status)]?.label || "Pending"}
                 </span>

@@ -13,17 +13,11 @@ public partial class CakeShopContext : DbContext
     }
 
     public virtual DbSet<Biscuit> Biscuits { get; set; }
-
     public virtual DbSet<Cake> Cakes { get; set; }
-
     public virtual DbSet<Category> Categories { get; set; }
-
     public virtual DbSet<Cream> Creams { get; set; }
-
     public virtual DbSet<Order> Orders { get; set; }
-
     public virtual DbSet<OrderItem> OrderItems { get; set; }
-
     public virtual DbSet<User> Users { get; set; }
     public virtual DbSet<SavedCake> SavedCakes { get; set; }
 
@@ -32,28 +26,19 @@ public partial class CakeShopContext : DbContext
         modelBuilder.Entity<Biscuit>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Biscuits__3214EC07C91D935A");
-
             entity.Property(e => e.ExtraPrice).HasColumnType("decimal(10, 2)");
-            entity.Property(e => e.Name)
-                .HasMaxLength(100)
-                .IsUnicode(false);
+            entity.Property(e => e.Name).HasMaxLength(100);
         });
 
         modelBuilder.Entity<Cake>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Cakes__3214EC07CE8EA47F");
-
             entity.Property(e => e.BasePrice).HasColumnType("decimal(10, 2)");
-            entity.Property(e => e.Description)
-                .HasMaxLength(500)
-                .IsUnicode(false);
+            entity.Property(e => e.Description).HasMaxLength(500);
             entity.Property(e => e.IsAvailable).HasDefaultValue(true);
-            entity.Property(e => e.Name)
-                .HasMaxLength(100)
-                .IsUnicode(false);
+            entity.Property(e => e.Name).HasMaxLength(100);
             entity.Property(e => e.PhotoUrl)
                 .HasMaxLength(500)
-                .IsUnicode(false)
                 .HasColumnName("PhotoURL");
 
             entity.HasOne(d => d.Category).WithMany(p => p.Cakes)
@@ -64,40 +49,29 @@ public partial class CakeShopContext : DbContext
         modelBuilder.Entity<Category>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Categori__3214EC07E83841B4");
-
-            entity.Property(e => e.Name)
-                .HasMaxLength(100)
-                .IsUnicode(false);
+            entity.Property(e => e.Name).HasMaxLength(100);
         });
 
         modelBuilder.Entity<Cream>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Creams__3214EC075ED4E427");
-
             entity.Property(e => e.ExtraPrice).HasColumnType("decimal(10, 2)");
-            entity.Property(e => e.Name)
-                .HasMaxLength(100)
-                .IsUnicode(false);
+            entity.Property(e => e.Name).HasMaxLength(100);
         });
 
         modelBuilder.Entity<Order>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Orders__3214EC076E32AD8C");
-
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
             entity.Property(e => e.DeliveryDate).HasColumnType("datetime");
-            entity.Property(e => e.Note)
-                .HasMaxLength(500)
-                .IsUnicode(false);
+            entity.Property(e => e.Note).HasMaxLength(500);
             entity.Property(e => e.PaymentStatus)
                 .HasMaxLength(50)
-                .IsUnicode(false)
                 .HasDefaultValue("Unpaid");
             entity.Property(e => e.Status)
                 .HasMaxLength(50)
-                .IsUnicode(false)
                 .HasDefaultValue("Pending");
             entity.Property(e => e.TotalPrice).HasColumnType("decimal(10, 2)");
 
@@ -109,7 +83,6 @@ public partial class CakeShopContext : DbContext
         modelBuilder.Entity<OrderItem>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__OrderIte__3214EC071D5906C5");
-
             entity.Property(e => e.ItemPrice).HasColumnType("decimal(10, 2)");
             entity.Property(e => e.Quantity).HasDefaultValue(1);
 
@@ -133,28 +106,17 @@ public partial class CakeShopContext : DbContext
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Users__3214EC07ED9A6E13");
-
             entity.HasIndex(e => e.Email, "UQ__Users__A9D105343D3C4C35").IsUnique();
-
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
-            entity.Property(e => e.Email)
-                .HasMaxLength(100)
-                .IsUnicode(false);
-            entity.Property(e => e.Name)
-                .HasMaxLength(100)
-                .IsUnicode(false);
-            entity.Property(e => e.PasswordHash)
-                .HasMaxLength(255)
-                .IsUnicode(false);
+            entity.Property(e => e.Email).HasMaxLength(100);
+            entity.Property(e => e.Name).HasMaxLength(100);
+            entity.Property(e => e.PasswordHash).HasMaxLength(255);
             entity.Property(e => e.Phone)
                 .HasMaxLength(20)
-                .IsUnicode(false)
                 .HasColumnName("phone");
-            entity.Property(e => e.Role)
-                .HasMaxLength(20)
-                .IsUnicode(false);
+            entity.Property(e => e.Role).HasMaxLength(20);
         });
 
         OnModelCreatingPartial(modelBuilder);
