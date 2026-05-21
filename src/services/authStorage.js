@@ -47,8 +47,8 @@ export function getCurrentUser() {
 
   try {
     return JSON.parse(raw);
-  } catch {
-    return null;
+  } catch (e) {
+    return [];
   }
 }
 
