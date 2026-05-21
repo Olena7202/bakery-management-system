@@ -80,7 +80,7 @@ export function getDashboardPathByRole(role) {
 export async function registerUser({ fullName, email, password, role, telegram = "" }) {
   try {
     await api.post('/auth/register', {
-      name: fullName.trim(),
+      fullName: fullName.trim(),
       email: email.trim().toLowerCase(),
       password,
       phone: '',
