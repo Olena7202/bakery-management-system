@@ -42,26 +42,74 @@ export function normalizeStatus(status) {
 export function formatDate(value) {
   if (!value) return "Дата не вказана";
 
-  return new Date(value).toLocaleDateString("uk-UA", {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "Дата не вказана";
+
+  return parsed.toLocaleDateString("uk-UA", {
     day: "2-digit",
     month: "short",
     year: "numeric",
   });
 }
 
-export function getSavedCakeData(saved) {
-  const cake = saved.cake || saved;
-  const price =
-    saved.customization?.totalPrice ??
-    cake.basePrice ??
-    cake.price ??
-    saved.totalPrice ??
-    0;
+function firstOrderItem(order) {
+  const items = order?.orderItems;
+  return Array.isArray(items) && items.length > 0 ? items[0] : null;
+}
+
+export function normalizeClientOrder(order) {
+  if (!order) return order;
+
+  const item = firstOrderItem(order);
+  const cake = item?.cake || order.cake || null;
+  const total = Number(order.total ?? order.totalPrice ?? item?.itemPrice ?? 0);
+  const date = order.date ?? order.createdAt ?? order.deliveryDate ?? null;
 
   return {
-    id: cake.id ?? saved.cakeId ?? saved.id,
-    name: cake.name || "Торт без назви",
-    image: cake.photoUrl || cake.image || "/images/your-custom-cake.jpg",
+    ...order,
+    total,
+    totalPrice: Number(order.totalPrice ?? total),
+    date,
+    createdAt: order.createdAt ?? date,
+    cakeName: order.cakeName || cake?.name || "Замовлення",
+    cakeImage:
+      order.cakeImage ||
+      cake?.photoUrl ||
+      cake?.image ||
+      "/images/your-custom-cake.jpg",
+    quantity: order.quantity ?? item?.quantity ?? 1,
+    biscuitName: order.biscuitName || item?.biscuit?.name || "",
+    creamName: order.creamName || item?.cream?.name || "",
+    note: order.note || "",
+  };
+}
+
+export function getSavedCakeData(saved, fallbackCake = null) {
+  const cake = saved.cake || saved;
+  const resolved = fallbackCake || null;
+  const cakeId = Number(saved.cakeId ?? cake?.id ?? resolved?.id ?? 0) || null;
+  const price = Number(
+    saved.customization?.totalPrice ??
+      cake.basePrice ??
+      cake.price ??
+      saved.totalPrice ??
+      resolved?.basePrice ??
+      resolved?.price ??
+      0
+  );
+
+  return {
+    id: saved.id ?? cakeId,
+    cakeId,
+    name: cake.name || saved.cakeName || resolved?.name || "Торт без назви",
+    image:
+      cake.photoUrl ||
+      cake.image ||
+      cake.imageUrl ||
+      saved.cakeImage ||
+      resolved?.photoUrl ||
+      resolved?.image ||
+      "/images/your-custom-cake.jpg",
     price,
     customization: saved.customization,
   };

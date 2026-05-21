@@ -1,10 +1,16 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { products } from "../../data/products";
 import { getCurrentUser } from "../../services/authStorage";
-import { removeFavoriteCake } from "../../services/cakeService";
+import { getCakes, getSavedCakes, removeFavoriteCake } from "../../services/cakeService";
 import { getOrdersByClient } from "../../services/orderService";
-import { getSavedCakes } from "../../services/cakeService";
-import { statusMeta, normalizeStatus, formatDate } from "../../utils/orderViewModel";
+import {
+  statusMeta,
+  normalizeStatus,
+  formatDate,
+  normalizeClientOrder,
+  getSavedCakeData,
+} from "../../utils/orderViewModel";
 
   function getOrderCake(order) {
     return order.orderItems?.[0]?.cake ?? null;
@@ -107,36 +113,56 @@ export default function ClientDashboard() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [selectedOrderIndex, setSelectedOrderIndex] = useState(null);
   const user = getCurrentUser();
+  const userId = user?.id;
   const [orders, setOrders] = useState([]);
   const [savedCakes, setSavedCakes] = useState([]);
-  const [loading, setLoading] = useState(Boolean(user));
+  const [loading, setLoading] = useState(Boolean(userId));
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    if (!user) return;
+    if (!userId) return;
 
-    Promise.all([getOrdersByClient(user.id), getSavedCakes(user.id)])
-      .then(([ordersData, savedData]) => {
-        setOrders(Array.isArray(ordersData) ? ordersData : []);
-        setSavedCakes(Array.isArray(savedData) ? savedData : []);
+    Promise.all([getOrdersByClient(userId), getSavedCakes(userId), getCakes().catch(() => [])])
+      .then(([ordersData, savedData, cakesData]) => {
+        const normalizedOrders = (Array.isArray(ordersData) ? ordersData : [])
+          .map(normalizeClientOrder)
+          .sort((a, b) => new Date(b.createdAt ?? b.date) - new Date(a.createdAt ?? a.date));
+        setOrders(normalizedOrders);
+
+        const cakesById = new Map();
+        [...(Array.isArray(cakesData) ? cakesData : []), ...products].forEach((cake) => {
+          const id = Number(cake?.id);
+          if (!Number.isFinite(id) || cakesById.has(id)) return;
+          cakesById.set(id, cake);
+        });
+
+        const normalizedSaved = (Array.isArray(savedData) ? savedData : []).map((saved) => {
+          const savedCakeId = Number(saved?.cake?.id ?? saved?.cakeId);
+          const fallbackCake = Number.isFinite(savedCakeId) ? cakesById.get(savedCakeId) : null;
+          return getSavedCakeData(saved, fallbackCake);
+        });
+        setSavedCakes(normalizedSaved);
+        setErrorMessage("");
       })
       .catch((err) => {
-        console.error('Error fetching dashboard data:', err);
+        console.error("Error fetching dashboard data:", err);
         setErrorMessage("Не вдалося завантажити дані кабінету.");
       })
       .finally(() => {
         setLoading(false);
       });
-  }, [user?.id]);
+  }, [userId]);
 
-  const userName = user?.fullName || "Гість";
-  const userEmail = user?.email || "email not set";
   const activeOrdersCount = orders.filter((order) => order.status !== "Delivered").length;
 
   function handleRemoveSaved(cake) {
-    if (!user?.id || cake?.id == null) return;
-    removeFavoriteCake(user.id, cake.id);
-    setSavedCakes((prev) => prev.filter((c) => c.id !== cake.id));
+    if (!user?.id) return;
+    const cakeId = cake.cakeId ?? cake.id;
+    if (cakeId == null) return;
+    removeFavoriteCake(user.id, cakeId);
+    setSavedCakes((prev) =>
+      prev.filter((c) => (c.cakeId ?? c.id) !== cakeId && c.id !== cake.id)
+    );
   }
 
   function handleOrderCake(cake) {
@@ -206,6 +232,9 @@ export default function ClientDashboard() {
           <small>Роль: {user.role || "client"}</small>
         </div>
       </section>
+
+      {errorMessage ? <p className="ui-error-banner">{errorMessage}</p> : null}
+      {loading ? <p className="client-loading-note">Завантаження кабінету…</p> : null}
 
       <section className="client-stats-grid" aria-label="Моя статистика">
         <article className="client-stat-tile">
@@ -293,7 +322,7 @@ export default function ClientDashboard() {
                       {cake.customization?.creamName || "Крем не змінено"}
                     </small>
                   ) : null}
-                  <p>{cake.price} грн</p>
+                  <p>{cake.price ? `${cake.price} грн` : "—"}</p>
                   <div className="client-saved-card-actions">
                     <button type="button" className="client-saved-order-btn" onClick={() => handleOrderCake(cake)}>
                       Замовити
@@ -345,8 +374,15 @@ export default function ClientDashboard() {
                 >
                   {statusMeta[normalizeStatus(selectedOrder.status)]?.label || "Pending"}
                 </span>
-                <strong>{selectedOrder.total} грн</strong>
+                <strong>{selectedOrder.totalPrice ?? selectedOrder.total} грн</strong>
               </div>
+              <button
+                type="button"
+                className="secondary-btn"
+                onClick={() => handleRepeatOrder(selectedOrder)}
+              >
+                Повторити замовлення
+              </button>
             </div>
           </section>
         </div>
