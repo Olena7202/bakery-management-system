@@ -20,6 +20,7 @@ public class AuthController : ControllerBase
         _config = config;
     }
 
+    //register endpoint
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterDto dto)
     {
@@ -28,6 +29,7 @@ public class AuthController : ControllerBase
             return BadRequest("Email already exists!");
         }
 
+        
         var user = new User
         {
             Name = dto.FullName,
