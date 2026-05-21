@@ -252,11 +252,11 @@ export default function ClientDashboard() {
                 >
                   <div>
                     <span className="client-order-id">#{orderNumber}</span>
-                    <h4>{order.cakeName || "Замовлення"}</h4>
+                    <h4>{getOrderCake(order)?.name || "Замовлення"}</h4>
                   </div>
-                  <p>{formatDate(order.date)}</p>
+                  <p>{formatDate(order.createdAt)}</p>
                   <span className={`client-status-badge ${meta.className}`}>{meta.label}</span>
-                  <strong>{order.total} грн</strong>
+                  <strong>{order.totalPrice} грн</strong>
                 </button>
               );
             })}
@@ -328,10 +328,10 @@ export default function ClientDashboard() {
             />
             <div className="client-order-modal-body">
               <span className="client-order-id">#{selectedOrderIndex}</span>
-              <h3>{selectedOrder.cakeName || "Замовлення"}</h3>
-              <p>Дата: {formatDate(selectedOrder.date)}</p>
+              <h3>{getOrderCake(selectedOrder)?.name || "Замовлення"}</h3>
+              <p>Дата: {formatDate(selectedOrder.createdAt)}</p>
               <p>Кількість: {selectedOrder.quantity || 1}</p>
-              <p>Базова ціна: {selectedOrder.cakeBasePrice || selectedOrder.total} грн</p>
+              <p>Базова ціна: {selectedOrder.totalPrice} грна</p>
               {selectedOrder.biscuitName ? <p>Бісквіт: {selectedOrder.biscuitName}</p> : null}
               {selectedOrder.creamName ? <p>Крем: {selectedOrder.creamName}</p> : null}
               {selectedOrder.note ? <p>Коментар: {selectedOrder.note}</p> : null}
