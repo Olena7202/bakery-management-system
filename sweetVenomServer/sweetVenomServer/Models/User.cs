@@ -7,6 +7,7 @@ public partial class User
 {
     public int Id { get; set; }
 
+    [Column(TypeName = "nvarchar(100)")]
     public string Name { get; set; } = null!;
 
     public string Email { get; set; } = null!;
