@@ -6,6 +6,10 @@ import { getOrdersByClient } from "../../services/orderService";
 import { getSavedCakes } from "../../services/cakeService";
 import { statusMeta, normalizeStatus, formatDate } from "../../utils/orderViewModel";
 
+  function getOrderCake(order) {
+    return order.orderItems?.[0]?.cake ?? null;
+  }
+
 function OrderDistribution({ orders }) {
   const total = orders.length;
   const rows = [
@@ -30,9 +34,7 @@ function OrderDistribution({ orders }) {
   const circumference = 2 * Math.PI * radius;
   let used = 0;
 
-  function getOrderCake(order) {
-    return order.orderItems?.[0]?.cake ?? null;
-  }
+
 
   return (
     <section className="client-panel client-distribution-panel">
