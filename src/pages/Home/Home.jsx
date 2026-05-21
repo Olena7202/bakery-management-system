@@ -33,8 +33,16 @@ export default function Home() {
     getCakes()
       .then((data) => {
         const normalized = (Array.isArray(data) ? data : []).map(normalizeCake);
-        setProducts(normalized);
-        if (normalized.length > 0) setActiveProductId(normalized[0].id);
+        if (normalized.length > 0) {
+          setProducts(normalized);
+          setActiveProductId(normalized[0].id);
+          setErrorMessage("");
+          return;
+        }
+        setErrorMessage("Каталог на сервері порожній. Показуємо прикладові десерти.");
+        const localFallback = fallbackProducts.map(normalizeCake);
+        setProducts(localFallback);
+        setActiveProductId(localFallback[0].id);
       })
       .catch((err) => {
         console.error("Failed to fetch cakes:", err);

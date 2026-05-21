@@ -194,8 +194,17 @@ export default function ConfectionerDashboard() {
             ? categoriesResult.value
             : [];
 
-        if (ordersResult.status === "rejected" || cakesResult.status === "rejected") {
-          setErrorMessage("Не вдалося завантажити дані. Перевір підключення до сервера.");
+        const ordersFailed = ordersResult.status === "rejected";
+        const cakesFailed = cakesResult.status === "rejected";
+
+        if (ordersFailed && cakesFailed) {
+          setErrorMessage(
+            "Не вдалося завантажити дані. Запустіть бекенд (F5 у Visual Studio, порт 5023) і перезавантажте сторінку."
+          );
+        } else if (ordersFailed) {
+          setErrorMessage("Торти завантажено. Замовлення недоступні — перевірте бекенд на localhost:5023.");
+        } else if (cakesFailed) {
+          setErrorMessage("Не вдалося завантажити каталог. Перевірте бекенд на localhost:5023.");
         } else {
           setErrorMessage("");
         }

@@ -38,8 +38,7 @@ export default function ClientSettings() {
           <p className="client-eyebrow">Кабінет клієнта</p>
           <h2 className="profile-settings-title">Налаштування профілю</h2>
           <p className="profile-settings-lead">
-            Дані зберігаються лише в цьому браузері (localStorage), без окремого API профілю на сервері.
-          </p>
+           </p>
         </header>
 
         <div className="profile-settings-body profile-settings-body--client">
