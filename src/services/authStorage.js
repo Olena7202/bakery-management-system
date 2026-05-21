@@ -78,28 +78,30 @@ export function getDashboardPathByRole(role) {
 }
 
 export async function registerUser({ fullName, email, password, role, telegram = "" }) {
-  await api.post('/auth/register', {
-    fullName: fullName.trim(),  // ✅
-    email: email.trim().toLowerCase(),
-    password,
-    phone: '',
-    role: role === 'confectioner' ? 'Confectioner' : 'Client'
-  });
-  const loginResult = await loginUser({ email, password });
-  if (loginResult.ok && role === "confectioner") {
-    saveConfectionerProfile({ userId: loginResult.user.id, telegram });
-    const refreshedUser = {
-      ...loginResult.user,
-      telegram: (telegram || "").trim()
-    };
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(refreshedUser));
-    return { ...loginResult, user: refreshedUser };
+  try {
+    await api.post('/auth/register', {
+      name: fullName.trim(),
+      email: email.trim().toLowerCase(),
+      password,
+      phone: '',
+      role: role === 'confectioner' ? 'Confectioner' : 'Client'
+    });
+    const loginResult = await loginUser({ email, password });
+    if (loginResult.ok && role === "confectioner") {
+      saveConfectionerProfile({ userId: loginResult.user.id, telegram });
+      const refreshedUser = {
+        ...loginResult.user,
+        telegram: (telegram || "").trim()
+      };
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(refreshedUser));
+      return { ...loginResult, user: refreshedUser };
+    }
+    return loginResult;
+  } catch (error) {
+    console.log('Register error:', JSON.stringify(error.response?.data));
+    const message = error.response?.data || 'Registration failed';
+    return { ok: false, message };
   }
-  return loginResult;
-} catch (error) {
-  const message = error.response?.data || 'Registration failed';
-  return { ok: false, message };
-}
 }
 
 
