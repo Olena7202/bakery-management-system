@@ -30,7 +30,7 @@ public class AuthController : ControllerBase
 
         var user = new User
         {
-            Name = dto.Name,
+            Name = dto.FullName,
             Email = dto.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
             Phone = dto.Phone,
